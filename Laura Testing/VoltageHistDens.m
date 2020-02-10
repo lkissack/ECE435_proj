@@ -11,7 +11,7 @@ end
 grayscaled_data = zeros(voltages, channels);
 
 %invert so darker = more
-grayscaled_data = 255 - uint8(255*mat2gray(data_hist));
+grayscaled_data = 256 - uint8(255*mat2gray(data_hist));
 
 %for each channel of the EEG data generate an image of the distribution
 %show this as an image, but scale first, providing an arbitrary number of
@@ -20,6 +20,7 @@ grayscaled_data = 255 - uint8(255*mat2gray(data_hist));
 display_density = imresize(grayscaled_data, [1000, 1000], 'nearest');
 imshow(display_density);
 %tested seems to work with random data, not sure 
+k=2;
 
 end
 
