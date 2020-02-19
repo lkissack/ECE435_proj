@@ -1,14 +1,15 @@
 function [display_density] = VoltageHistDens(data)
 %read data - very dependent on formulation of data
-[voltages, channels] = size(data);
+%[voltages, channels] = size(data);
+[channels, voltages] = size(data);
 %do this for each channel of the EEG data
 data_hist = zeros(256, channels);
 for i = 1:channels
-    data_hist(:,i) = imhist(data(:,i));
+    data_hist(:,i) = imhist(data(i,:));
 end
 
-%determined using an image, not EEG data - might change
-grayscaled_data = zeros(voltages, channels);
+%Want 256 levels for the graylevels of the channels
+grayscaled_data = zeros(256, channels);
 
 %invert so darker = more
 grayscaled_data = 256 - uint8(255*mat2gray(data_hist));
