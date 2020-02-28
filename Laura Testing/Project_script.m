@@ -5,7 +5,10 @@ clear
 close all
 %% Fake Data creation
 
-data = randn(63, 2000, 'single');
+rdata = randn(63, 2000, 'single');
+data= rdata;
+tdata = load('test2000.mat');
+data = tdata.d;
 
 %% Create Grayscale Figure
 
@@ -13,7 +16,18 @@ data2grayscale(data);
 
 %% Plot specific event
 hold on
-plot_event(data, 500);
 
-plot_event(data, 550);
+a = plot_event(data, 500);
+
+b = plot_event(data, 4);
+
+%Added in 2019B
+% newcolors = {'red','red','blue','blue'};
+% colororder(newcolors);
+
 hold off
+figure(3);
+plot(1:62,a,'r');
+hold on
+plot(1:62,b,'b');
+c = a -b;
