@@ -5,15 +5,15 @@ clear
 close all
 %% Fake Data creation
 
-rdata = randn(63, 2000, 'single');
-data= rdata;
+% rdata = randn(63, 2000, 'single');
+% data= rdata;
 
 %% Load first 2000 sample data
 tdata = load('test2000.mat');
 data = tdata.d;
 
 %% Create Grayscale Figure
-
+close all;
 g = data2grayscale(data);
 
 %% Scale Region by min/max values
@@ -33,8 +33,12 @@ b = plot_event(data, 4);
 % colororder(newcolors);
 
 hold off
-figure(3);
+figure(4);
 plot(1:62,a,'r');
 hold on
 plot(1:62,b,'b');
 c = a -b;
+
+%% Evaluation - Generate Butterfly plot
+
+butterfly(data);
