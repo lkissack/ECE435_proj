@@ -12,32 +12,111 @@ close all
 tdata = load('test2000.mat');
 data = tdata.d;
 
-%% Create Grayscale Figure
-close all;
-g = data2grayscale(data);
-
 %% Scale Region by min/max values
 % Create function to generate image plot
+[channels, measurements] = size(data);
 
-visualize(data);
+%This should be its own function
+scale_factors = ones(channels,1);
+%scale each channel by max and min values
 
-%% Plot specific event
+for channel = 1:channels
+    %determine the scale factor that should be applied ot the channel
+%     maximum = max(data(channel,:));
+%     minimum = min(data(channel,:));
+%     scale = (maximum - minimum)/7;
+
+    maximum = max(abs(data(channel,:)));
+    scale_factors(channel) = 2*maximum/70000;
+    %assuming the absolute max of the data is 3.5 microv 
+end
+%% Create Grayscale Figure
+close all;
+grayscale = data2grayscale(data);
+
+%% Scale Histogram tiles
+% channel_array = imresize( g(:,1), [1000, 200],'nearest');
+tile_size = [256, 200];
+%not sure which implementation is better
+channel_array = zeros(tile_size(1), tile_size(2)*channels);
+channel_matrix = zeros(tile_size(1), tile_size(2), channels);
+
+for channel = 1:channels
+   % c_mod = imresize( g(:,channel), [scale_factors(channel)*1000, 200],'nearest');
+   %divide the scale factor by two, round, and then multiply to ensure even
+   %number
+    c_mod = imresize( grayscale(:,channel), [2*round(scale_factors(channel)*tile_size(1)/2), 200],'nearest');
+    
+    csize = size(c_mod);
+    tile = 255*ones(tile_size(1), tile_size(2));
+    tile(((tile_size(1)-csize(1))/2): ((tile_size(1) + csize(1))/2 - 1), :) = c_mod;
+    
+    channel_array(:,1+ 200*(channel-1):200*channel) = tile;
+    channel_matrix(:,:,channel) = tile;
+   
+end
+figure('Name', 'Scaled Linear Histogram Display');
+imshow(channel_array,[]);
+
+%% Put tiles in temporal locations
+figure('Name','Temporal Map');
+%imshow(channel_matrix(:,:,1),[]);
+
+%put histograms in the right locations
+%maps channel to temporal location
+[map,electrodes] = temporal_location();
+
+temporal_map = zeros(8*tile_size(1),11*tile_size(2));
+
+for tile = 1:channels
+    %[row,col] = map(tile);
+    row = map(tile,1);
+    col = map(tile,2);
+    %temporal_map(1+tile_size(1)*(row-1):tile_size(1)*row,1+tile_size(1)*(col-1):tile_size(1)*col) = channel_matrix(:,:,tile);
+    temporal_map(1+tile_size(1)*(row-1):tile_size(1)*row,1+tile_size(2)*(col-1):tile_size(2)*col) = channel_matrix(:,:,tile);
+       
+end
 hold on
+imshow(temporal_map,[]);
+%% Plot instance specific data
 
-a = plot_event(data, 500);
+instant = 250;
+[rows, cols] = size(electrodes);
 
-b = plot_event(data, 4);
-
-%Added in 2019B
-% newcolors = {'red','red','blue','blue'};
-% colororder(newcolors);
-
+for row = 1:rows
+    nonzero = find(electrodes(row,:));
+    electrodes(row,nonzero)
+    y = data(electrodes(row,nonzero),instant);
+    offset = tile_size(1)/2 + (row-1)*tile_size(1);
+    y = 142.85*y/10000;
+    y = y + offset;
+    %still need to scale this
+    xaxis = tile_size(2)/2 + tile_size(2)*(nonzero -1);
+    hold on
+    plot(xaxis, y);
+end
 hold off
-figure(4);
-plot(1:62,a,'r');
-hold on
-plot(1:62,b,'b');
-c = a -b;
+
+%% Visualize function
+% visualize(data);
+% 
+% %% Plot specific event
+% hold on
+% 
+% a = plot_event(data, 500);
+% 
+% b = plot_event(data, 4);
+% 
+% %Added in 2019B
+% % newcolors = {'red','red','blue','blue'};
+% % colororder(newcolors);
+% 
+% hold off
+% figure(4);
+% plot(1:62,a,'r');
+% hold on
+% plot(1:62,b,'b');
+% c = a -b;
 
 %% Evaluation - Generate Butterfly plot
 

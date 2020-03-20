@@ -1,5 +1,5 @@
 function [] = visualize(data)
-
+%% Determine tile scale factors
 [channels, measurements] = size(data);
 
 %This should be its own function
@@ -20,13 +20,13 @@ end
 g = data2grayscale(data);
 
 % display each channel in the correct location
-figure('Name', 'Linear Histogram Display');
+figure('Name', 'Scaled Linear Histogram Display');
 
 % c = g(:,1);
 % c_mod = imresize(c,[scale_factors(1)*1000,200],'nearest');
 % imshow(c_mod,[]);
 
-
+%% Scale tiles accordingly
 % channel_array = imresize( g(:,1), [1000, 200],'nearest');
 tile_size = [256, 200];
 %not sure which implementation is better
@@ -50,12 +50,13 @@ end
 
 imshow(channel_array,[]);
 
+%% Put tiles in temporal locations
 figure('Name','Temporal Map');
 %imshow(channel_matrix(:,:,1),[]);
 
 %put histograms in the right locations
 %maps channel to temporal location
-map = temporal_location();
+[map,electrodes] = temporal_location();
 
 temporal_map = zeros(8*tile_size(1),11*tile_size(2));
 
@@ -67,18 +68,23 @@ for tile = 1:channels
     temporal_map(1+tile_size(1)*(row-1):tile_size(1)*row,1+tile_size(2)*(col-1):tile_size(2)*col) = channel_matrix(:,:,tile);
        
 end
-%9 in row 1
-   %11 in row two
-   %9 in row 3
-   %11
-   %11
-   %7
 imshow(temporal_map,[]);
 %also need to implement locations of th
 
+%% plot instance specific data
+
+% top row of data points
+row = 1;
+xaxis = tile_size(2)/2 + (find(electrodes(row,:))-1)*tile_size(2);
+
+%
+
+
+
+
 end
 
-function[map] = temporal_location()
+function[map,electrode_locations] = temporal_location()
 
 % electrodes = ['af3','af4', 'af7','af8','afz','c1','c2','c3','c4', 'c5','c6',
 %                 'cp1','cp2','cp3','cp4','cp5','cp6','cpz','cz','f1','f2',

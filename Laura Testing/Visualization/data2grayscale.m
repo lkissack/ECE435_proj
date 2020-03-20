@@ -22,6 +22,7 @@ b = hist/measurements;
 grayscale_hist = 256 - uint8(255*mat2gray(b'));
 
 %for testing purposes
+figure('Name', 'Linear Histogram Display');
 imshow(grayscale_hist,[]);
 %scale the image to a reasonable range.
 display_density = imresize(grayscale_hist, [1000, 100*channels], 'nearest');
