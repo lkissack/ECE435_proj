@@ -12,6 +12,9 @@ close all
 tdata = load('test2000.mat');
 data = tdata.d;
 
+%% Create Grayscale Figure
+close all;
+grayscale = data2grayscale(data);
 %% Scale Region by min/max values
 % Create function to generate image plot
 [channels, measurements] = size(data);
@@ -20,22 +23,24 @@ data = tdata.d;
 scale_factors = ones(channels,1);
 %scale each channel by max and min values
 
+%have not tested this line
+data_maximum = max(max(abs(data)));
+data_maximum = 35000;
+
 for channel = 1:channels
     %determine the scale factor that should be applied ot the channel
 %     maximum = max(data(channel,:));
 %     minimum = min(data(channel,:));
 %     scale = (maximum - minimum)/7;
 
-    maximum = max(abs(data(channel,:)));
-    scale_factors(channel) = 2*maximum/70000;
+    channel_maximum = max(abs(data(channel,:)));
+    scale_factors(channel) = channel_maximum/data_maximum;
     %assuming the absolute max of the data is 3.5 microv 
 end
-%% Create Grayscale Figure
-close all;
-grayscale = data2grayscale(data);
+
 
 %% Scale Histogram tiles
-% channel_array = imresize( g(:,1), [1000, 200],'nearest');
+% tile size chosen arbitrarily
 tile_size = [256, 200];
 %not sure which implementation is better
 channel_array = zeros(tile_size(1), tile_size(2)*channels);
@@ -66,6 +71,7 @@ figure('Name','Temporal Map');
 %maps channel to temporal location
 [map,electrodes] = temporal_location();
 
+%map shape is dependent on the 
 temporal_map = zeros(8*tile_size(1),11*tile_size(2));
 
 for tile = 1:channels
@@ -82,13 +88,14 @@ imshow(temporal_map,[]);
 
 instant = 250;
 [rows, cols] = size(electrodes);
+mv_scale = 128/data_maximum;
 
 for row = 1:rows
     nonzero = find(electrodes(row,:));
     electrodes(row,nonzero)
-    y = data(electrodes(row,nonzero),instant);
+    y = data(electrodes(row,nonzero),instant)
+    y = mv_scale*y
     offset = tile_size(1)/2 + (row-1)*tile_size(1);
-    y = 142.85*y/10000;
     y = y + offset;
     %still need to scale this
     xaxis = tile_size(2)/2 + tile_size(2)*(nonzero -1);
