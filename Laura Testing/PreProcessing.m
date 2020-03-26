@@ -1,3 +1,7 @@
+%% Preprocessing Script for EEG data visualization
+% This script requires the function getEvent.m as well as the signal
+% processing toolbox which is used for filtering
+
 clear all
 clc
 %% Load EEG Data
@@ -47,19 +51,20 @@ for i = 1:numCH
 end 
 
 %% Data Filtering (Applies an IIR filter)
+% filtfilt function used as it has zero phase distortion on data
 %Bandpass IIR
 bpFilt = designfilt('bandpassiir','FilterOrder',4, ...
          'HalfPowerFrequency1',0.1,'HalfPowerFrequency2',30, ...
          'SampleRate',samp_rate);
 
-BPFiltered = filter(bpFilt, rerefdat(:,:));
+BPFiltered = filtfilt(bpFilt, rerefdat(:,:));
 
 %Notch IIR
 
 w0 = 60/(samp_rate);
 bw = w0/35; %35 is Q factor
 [b,a] = iirnotch(w0,bw);
-NotchFiltered = filter(b,a, BPFiltered(:,:));
+NotchFiltered = filtfilt(b,a, BPFiltered(:,:));
 
 %% Segmentation, Epoched for -1000 ms to 2000 ms 
 
@@ -97,7 +102,7 @@ types = sort(types);
 numEventTypes = zeros(numTypes,1);
 
 for j = 1:numEvents
-    if ismember(events(j).type,types)
+    if ismember(events(j).type,types) && events(j).latency ~= 1
         typeIndex = find(types==events(j).type);
         numEventTypes(typeIndex) = numEventTypes(typeIndex) + 1;
     end
@@ -139,6 +144,10 @@ for i = 1:numRelEvents
     end
 end
 
+timeFrame = 1:750;
+subplot(2,1,1);
+plot(timeFrame, epochedDat.T10.eventNum52(:,:));
+title("Not Corrected")
 
 %% Perform baseline correction on all Epochs
 
@@ -159,7 +168,55 @@ for i = 1:numRelEvents
     end
 end
 
-%% Plot End Results for type 3 event number 1
-timeFrame = (latencies(24)-1000/4+1):(latencies(24)+2000/4);
-plot(timeFrame, epochedDat(:,:).T16.eventNum1);
-title("Filtered")
+%% Artifact Rejection
+% Checks for artifacts based on the variance of the channel and a threshold
+% value varCheck as recommended here: https://www.krigolsonlab.com/muse-analysis-matlab.html
+% many different approaches can be used to perform artifact rejection,
+% however to keep simplicity in this project the variance was used. 
+
+threshold = 200;
+artifactRejected = epochedDat;
+for i = 1:numRelEvents
+    for j = 1:eventCount(find(types==events(i+(numEvents-numRelEvents)).type))
+        event = getEvent(artifactRejected, events(i+(numEvents-numRelEvents)).type, j);
+        for n = 1:numCH
+            varCheck = var(event(n,:));
+            if varCheck > threshold
+                artifactRejected.( ...
+                    strcat("T", int2str(events(i+(numEvents-numRelEvents)).type))).( ...
+                    strcat("eventNum", int2str(j)))(n,:) = NaN;
+            end
+        end
+    end
+end
+
+%% Save Baseline Corrected and Artifact Rejected data as new data files
+%Outputs .mat files for both artifact rejected data and baseline corrected
+%data in case one wants to work with data that has not yet been artifact
+%rejected.
+
+%Make directories in data folder for processed data.
+
+path = split(fullpath, '\');
+path(end) = [];
+path = join(path, '\');
+
+%Make folders for both artifact rejected and baseline corrected data
+%Note* Artifact rejected has also been baseline corrected
+mkdir(strcat(path, " PreProcessed"));
+mkdir(strcat(strcat(path, " PreProcessed\"), "Artifact Rejected"));
+mkdir(strcat(strcat(path, " PreProcessed\"), "Artifacts Included"));
+
+filename = strcat('\', structname);
+%Save structs as .mat files in the appropriate folders
+save(strcat(strcat(strcat(path, " PreProcessed"), "\Artifacts Included"),...
+    strcat(filename, "NAR.mat")), 'epochedDat');
+
+save(strcat(strcat(strcat(path, " PreProcessed"), "\Artifact Rejected"),...
+    strcat(filename, "AR.mat")),'artifactRejected');
+
+%% Plot End Results
+% timeFrame = (latencies(24)-1000/4+1):(latencies(24)+2000/4);
+subplot(2,1,2);
+plot(timeFrame, epochedDat.T10.eventNum52(:,:));
+title("Baseline Corrected")
