@@ -10,7 +10,9 @@ close all
 
 %% Load first 2000 sample data
 tdata = load('test2000.mat');
-data = tdata.d;
+data2000 = tdata.d;
+data40000 = load('test40000.mat');
+data = data40000.test40000(:,1:5000);
 
 %% Create Grayscale Figure
 close all;
@@ -50,11 +52,16 @@ for channel = 1:channels
    % c_mod = imresize( g(:,channel), [scale_factors(channel)*1000, 200],'nearest');
    %divide the scale factor by two, round, and then multiply to ensure even
    %number
-    c_mod = imresize( grayscale(:,channel), [2*round(scale_factors(channel)*tile_size(1)/2), tile_size(2)],'nearest');
-    
-    csize = size(c_mod);
+   
+    resize_height = 2*round(scale_factors(channel)*tile_size(1)/2)
+    csize = [0,0];
     tile = 255*ones(tile_size(1), tile_size(2));
-    tile(((tile_size(1)-csize(1))/2): ((tile_size(1) + csize(1))/2 - 1), :) = c_mod;
+    %only rescale the image if it is large enough to be scaled
+    if resize_height > 0
+        c_mod = imresize( grayscale(:,channel), [resize_height, tile_size(2)],'nearest');
+        csize = size(c_mod);
+        tile(((tile_size(1)-csize(1))/2): ((tile_size(1) + csize(1))/2 - 1), :) = c_mod;
+    end
     
     channel_array(:,1+ 200*(channel-1):200*channel) = tile;
     channel_matrix(:,:,channel) = tile;
@@ -86,16 +93,40 @@ hold on
 imshow(temporal_map,[]);
 %% Plot instance specific data
 
-instances = [250,1888];
+instances = [3,440];
+data_maximum = max(max(abs(data)))
 colour = ['r','b'];
 [rows, cols] = size(electrodes);
-mv_scale = 128/data_maximum;
+%Multiply by negative since pixels grow downwards
+% mv_scale = -1*128/data_maximum;
+% for i = 1:length(instances)
+%     for row = 1:rows-1
+%         row
+%         nonzero = find(electrodes(row,:));
+%         electrodes(row,nonzero);
+%         y = data(electrodes(row,nonzero),instances(i));
+%         y = mv_scale*y;
+%         offset = tile_size(1)/2 + (row-1)*tile_size(1);
+%         y = y + offset;
+%         %still need to scale this
+%         xaxis = tile_size(2)/2 + tile_size(2)*(nonzero -1);
+%         hold on
+%         plot(xaxis, y,colour(i));
+%     end
+% end
+% hold off
+
+hold on
 for i = 1:length(instances)
     for row = 1:rows-1
+        row
         nonzero = find(electrodes(row,:));
-        electrodes(row,nonzero)
-        y = data(electrodes(row,nonzero),instances(i))
-        y = mv_scale*y
+        idx = electrodes(row,nonzero);
+        mv_scale = 128*scale_factors(electrodes(row,nonzero),1);
+        avg = mean(data(idx,:),2);
+        (data(idx,instances(i))-avg)./(max(data(idx,:),[],2)-avg)
+        y = (data(idx,instances(i))-avg)./(max(data(idx,:),[],2)-avg);
+        y = mv_scale.*y;
         offset = tile_size(1)/2 + (row-1)*tile_size(1);
         y = y + offset;
         %still need to scale this

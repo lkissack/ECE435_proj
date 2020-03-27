@@ -6,20 +6,27 @@ hist = zeros(channels, 256);
 %might want to make bin widths standardized?
 
 for i= 1:channels
-    %f = histogram(data,256);
-    dist = histcounts(data(i,:),256);
+    % forcing distribution to be centralized around 0 - not the right way
+    % to do this
+%     channel_max = max(abs(data(i,:)));
+%     edges = -channel_max - 1:(channel_max +1)/128:channel_max + 1
+%     dist = histcounts(data(i,:),edges,'Normalization','probability');
+    
+    %original code
+    dist = histcounts(data(i,:),256,'Normalization','probability');
     %each row represents one channel
-    hist(i,:) = dist;    
+    hist(i,:) = dist;
 end
 %for testing purposes
 %histogram(data(1,:), 256);
 
-%scale by the total number of measurements to get probability
-b = hist/measurements;
+%Take the transpose so each horizontal level represents a voltage
+%Flip so larger voltages are above lower voltages
+b = flip(hist');
 
 %transpose the histogram so each column represents a channel
 %subtract this value from 256 so histogram is inverted
-grayscale_hist = 256 - uint8(255*mat2gray(b'));
+grayscale_hist = 256 - uint8(255*mat2gray(b));
 
 %for testing purposes
 figure('Name', 'Linear Histogram Display');

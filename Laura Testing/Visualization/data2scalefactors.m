@@ -5,9 +5,16 @@ function [scale_factors,data_maximum] = data2scalefactors(data)
 scale_factors = ones(channels,1);
 %scale each channel by max and min values
 
-%have not tested this line
 data_maximum = max(max(abs(data)));
-data_maximum = 35000;
+%data_maximum = 32500;
+
+% %use with original scaling - but then plotting at the end is difficult
+min(abs(data),[],2)
+max(abs(data),[],2)
+data_maximum = max(max(abs(data),[],2)-min(abs(data),[],2));
+
+%for some buffer space add an extra 10% to the maximum
+data_maximum = 1.1*data_maximum;
 
 for channel = 1:channels
     %determine the scale factor that should be applied ot the channel
@@ -15,7 +22,7 @@ for channel = 1:channels
 %     minimum = min(data(channel,:));
 %     scale = (maximum - minimum)/7;
 
-    channel_maximum = max(abs(data(channel,:)));
+    channel_maximum = max(abs(data(channel,:)))-min(abs(data(channel,:)));
     scale_factors(channel) = channel_maximum/data_maximum;
     %assuming the absolute max of the data is 3.5 microv 
 end
