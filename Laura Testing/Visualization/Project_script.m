@@ -12,7 +12,7 @@ close all
 tdata = load('test2000.mat');
 data2000 = tdata.d;
 data40000 = load('test40000.mat');
-data = data40000.test40000(:,1:5000);
+data = data40000.test40000(:,1500:2000);
 
 %% Create Grayscale Figure
 close all;
@@ -45,7 +45,7 @@ grayscale = data2grayscale(data);
 % tile size chosen arbitrarily
 tile_size = [256, 200];
 %not sure which implementation is better
-channel_array = zeros(tile_size(1), tile_size(2)*channels);
+%channel_array = zeros(tile_size(1), tile_size(2)*channels);
 channel_matrix = zeros(tile_size(1), tile_size(2), channels);
 
 for channel = 1:channels
@@ -53,7 +53,7 @@ for channel = 1:channels
    %divide the scale factor by two, round, and then multiply to ensure even
    %number
    
-    resize_height = 2*round(scale_factors(channel)*tile_size(1)/2)
+    resize_height = 2*round(scale_factors(channel)*tile_size(1)/2);
     csize = [0,0];
     tile = 255*ones(tile_size(1), tile_size(2));
     %only rescale the image if it is large enough to be scaled
@@ -63,12 +63,12 @@ for channel = 1:channels
         tile(((tile_size(1)-csize(1))/2): ((tile_size(1) + csize(1))/2 - 1), :) = c_mod;
     end
     
-    channel_array(:,1+ 200*(channel-1):200*channel) = tile;
+    %channel_array(:,1+ 200*(channel-1):200*channel) = tile;
     channel_matrix(:,:,channel) = tile;
    
 end
-figure('Name', 'Scaled Linear Histogram Display');
-imshow(channel_array,[]);
+% figure('Name', 'Scaled Linear Histogram Display');
+% imshow(channel_array,[]);
 
 %% Put tiles in temporal locations
 figure('Name','Temporal Map');
@@ -93,10 +93,12 @@ hold on
 imshow(temporal_map,[]);
 %% Plot instance specific data
 
+%arbitrarily chosen - make user input
 instances = [3,440];
-data_maximum = max(max(abs(data)))
+
 colour = ['r','b'];
 [rows, cols] = size(electrodes);
+%data_maximum = max(max(abs(data)))
 %Multiply by negative since pixels grow downwards
 % mv_scale = -1*128/data_maximum;
 % for i = 1:length(instances)
@@ -119,17 +121,17 @@ colour = ['r','b'];
 hold on
 for i = 1:length(instances)
     for row = 1:rows-1
-        row
+%         row
         nonzero = find(electrodes(row,:));
         idx = electrodes(row,nonzero);
-        mv_scale = 128*scale_factors(electrodes(row,nonzero),1);
-        avg = mean(data(idx,:),2);
-        (data(idx,instances(i))-avg)./(max(data(idx,:),[],2)-avg)
-        y = (data(idx,instances(i))-avg)./(max(data(idx,:),[],2)-avg);
+        mv_scale = -128*scale_factors(electrodes(row,nonzero),1);
+        
+        mid = (max(data(idx,:),[],2) + min(data(idx,:),[],2))/2;
+        diff = (max(data(idx,:),[],2) - min(data(idx,:),[],2))/2;
+        y = (data(idx,instances(i))-mid)./diff;
         y = mv_scale.*y;
         offset = tile_size(1)/2 + (row-1)*tile_size(1);
         y = y + offset;
-        %still need to scale this
         xaxis = tile_size(2)/2 + tile_size(2)*(nonzero -1);
         hold on
         plot(xaxis, y,colour(i));
