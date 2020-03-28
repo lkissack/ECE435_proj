@@ -137,27 +137,6 @@ for i = 1:length(instances)
 end
 hold off
 
-%% Visualize function
-% visualize(data);
-% 
-% %% Plot specific event
-% hold on
-% 
-% a = plot_event(data, 500);
-% 
-% b = plot_event(data, 4);
-% 
-% %Added in 2019B
-% % newcolors = {'red','red','blue','blue'};
-% % colororder(newcolors);
-% 
-% hold off
-% figure(4);
-% plot(1:62,a,'r');
-% hold on
-% plot(1:62,b,'b');
-% c = a -b;
-
 %% Evaluation - Generate Butterfly plot
 
 butterfly(data);
