@@ -1,19 +1,11 @@
 %% ECE 435 Final Project Code - EEG Data Visualization Project
 % by Laura Kissack (V00844693) and Tanner Oleksuik (V00867082)
 
+preProcessing;
 
 
-%% Cleaning
-clear
-close all
-
-%% Load selected data
-% tdata = load('test2000.mat');
-% data2000 = tdata.d;
-% data40000 = load('test40000.mat');
-% data = data40000.test40000(:,1500:2000);
-% data = data - mean(data,2);
-
+%% Specify data for visualization
+%arbitrarily chosen 
 d = load('T10E52.mat');
 data = d.data;
 % test = load('participant1NAR.mat');
