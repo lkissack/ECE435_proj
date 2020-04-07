@@ -5,140 +5,43 @@ clear
 close all
 %% Fake Data creation
 
-% rdata = randn(63, 2000, 'single');
+% rdata = randn(64, 2000, 'single');
 % data= rdata;
 
-%% Load first 2000 sample data
-tdata = load('test2000.mat');
-data2000 = tdata.d;
-data40000 = load('test40000.mat');
-data = data40000.test40000(:,1500:2000);
+%% Load selected data
+% tdata = load('test2000.mat');
+% data2000 = tdata.d;
+% data40000 = load('test40000.mat');
+% data = data40000.test40000(:,1500:2000);
+% data = data - mean(data,2);
+
+d = load('T10E52.mat');
+data = d.data;
+% test = load('participant1NAR.mat');
+% data = test.epochedDat.T10.eventNum52;
 
 %% Create Grayscale Figure
 close all;
 grayscale = data2grayscale(data);
+
 %% Scale Region by min/max values
 % Create function to generate image plot
 [channels, measurements] = size(data);
-% 
-% %This should be its own function
-% scale_factors = ones(channels,1);
-% %scale each channel by max and min values
-% 
-% %have not tested this line
-% data_maximum = max(max(abs(data)));
-% data_maximum = 35000;
-% 
-% for channel = 1:channels
-%     %determine the scale factor that should be applied ot the channel
-% %     maximum = max(data(channel,:));
-% %     minimum = min(data(channel,:));
-% %     scale = (maximum - minimum)/7;
-% 
-%     channel_maximum = max(abs(data(channel,:)));
-%     scale_factors(channel) = channel_maximum/data_maximum;
-%     %assuming the absolute max of the data is 3.5 microv 
-% end
 [scale_factors, data_maximum] = data2scalefactors(data);
 
 %% Scale Histogram tiles
 % tile size chosen arbitrarily
 tile_size = [256, 200];
-%not sure which implementation is better
-%channel_array = zeros(tile_size(1), tile_size(2)*channels);
-channel_matrix = zeros(tile_size(1), tile_size(2), channels);
-
-for channel = 1:channels
-   % c_mod = imresize( g(:,channel), [scale_factors(channel)*1000, 200],'nearest');
-   %divide the scale factor by two, round, and then multiply to ensure even
-   %number
-   
-    resize_height = 2*round(scale_factors(channel)*tile_size(1)/2);
-    csize = [0,0];
-    tile = 255*ones(tile_size(1), tile_size(2));
-    %only rescale the image if it is large enough to be scaled
-    if resize_height > 0
-        c_mod = imresize( grayscale(:,channel), [resize_height, tile_size(2)],'nearest');
-        csize = size(c_mod);
-        tile(((tile_size(1)-csize(1))/2): ((tile_size(1) + csize(1))/2 - 1), :) = c_mod;
-    end
-    
-    %channel_array(:,1+ 200*(channel-1):200*channel) = tile;
-    channel_matrix(:,:,channel) = tile;
-   
-end
-% figure('Name', 'Scaled Linear Histogram Display');
-% imshow(channel_array,[]);
+channel_matrix = scaleHistogram(scale_factors,channels,tile_size,grayscale);
 
 %% Put tiles in temporal locations
-figure('Name','Temporal Map');
-%imshow(channel_matrix(:,:,1),[]);
-
-%put histograms in the right locations
-%maps channel to temporal location
 [map,electrodes] = temporal_location();
+[temporal_map] = temporalPlotting(channel_matrix,map,channels,tile_size);
 
-%map shape is dependent on the 
-temporal_map = zeros(8*tile_size(1),11*tile_size(2));
-
-for tile = 1:channels
-    %[row,col] = map(tile);
-    row = map(tile,1);
-    col = map(tile,2);
-    %temporal_map(1+tile_size(1)*(row-1):tile_size(1)*row,1+tile_size(1)*(col-1):tile_size(1)*col) = channel_matrix(:,:,tile);
-    temporal_map(1+tile_size(1)*(row-1):tile_size(1)*row,1+tile_size(2)*(col-1):tile_size(2)*col) = channel_matrix(:,:,tile);
-       
-end
-hold on
-imshow(temporal_map,[]);
 %% Plot instance specific data
-
-%arbitrarily chosen - make user input
-instances = [3,440];
-
-colour = ['r','b'];
-[rows, cols] = size(electrodes);
-%data_maximum = max(max(abs(data)))
-%Multiply by negative since pixels grow downwards
-% mv_scale = -1*128/data_maximum;
-% for i = 1:length(instances)
-%     for row = 1:rows-1
-%         row
-%         nonzero = find(electrodes(row,:));
-%         electrodes(row,nonzero);
-%         y = data(electrodes(row,nonzero),instances(i));
-%         y = mv_scale*y;
-%         offset = tile_size(1)/2 + (row-1)*tile_size(1);
-%         y = y + offset;
-%         %still need to scale this
-%         xaxis = tile_size(2)/2 + tile_size(2)*(nonzero -1);
-%         hold on
-%         plot(xaxis, y,colour(i));
-%     end
-% end
-% hold off
-
 hold on
-for i = 1:length(instances)
-    for row = 1:rows-1
-%         row
-        nonzero = find(electrodes(row,:));
-        idx = electrodes(row,nonzero);
-        mv_scale = -128*scale_factors(electrodes(row,nonzero),1);
-        
-        mid = (max(data(idx,:),[],2) + min(data(idx,:),[],2))/2;
-        diff = (max(data(idx,:),[],2) - min(data(idx,:),[],2))/2;
-        y = (data(idx,instances(i))-mid)./diff;
-        y = mv_scale.*y;
-        offset = tile_size(1)/2 + (row-1)*tile_size(1);
-        y = y + offset;
-        xaxis = tile_size(2)/2 + tile_size(2)*(nonzero -1);
-        hold on
-        plot(xaxis, y,colour(i));
-    end
-end
+timePlotting(data,scale_factors,electrodes,tile_size);
 hold off
-
 %% Evaluation - Generate Butterfly plot
 
 butterfly(data);

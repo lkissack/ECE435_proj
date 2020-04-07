@@ -1,9 +1,9 @@
 function [] = timePlotting(data,scale_factors,electrodes,tile_size)
 %arbitrarily chosen - make user input
-prompt = 'Enter instance before event (value from 1-499)';
+prompt = 'Enter instance before event (value from 1-749)';
 x = input(prompt);
 
-prompt = 'Enter instance after event (value from 1-499)'
+prompt = 'Enter instance after event (value from 1-749)'
 y = input(prompt);
 instances = [x,y];
 

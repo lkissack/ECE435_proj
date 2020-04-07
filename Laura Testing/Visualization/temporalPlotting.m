@@ -16,5 +16,7 @@ for tile = 1:channels
     temporal_map(1+tile_size(1)*(row-1):tile_size(1)*row,1+tile_size(2)*(col-1):tile_size(2)*col) = channel_matrix(:,:,tile);
        
 end
+figure('Name','Temporal Map');
+imshow(temporal_map,[]);
 end
 
