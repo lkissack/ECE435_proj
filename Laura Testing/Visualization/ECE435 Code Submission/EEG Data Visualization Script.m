@@ -33,5 +33,5 @@ hold on
 timePlotting(data,scale_factors,electrodes,tile_size);
 hold off
 
-%% Evaluation - Generate Butterfly plot
+%% Evaluation - Generate Butterfly plot for comparison
 butterfly(data);
