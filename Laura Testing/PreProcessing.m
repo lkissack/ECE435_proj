@@ -54,14 +54,14 @@ end
 % filtfilt function used as it has zero phase distortion on data
 %Bandpass IIR
 bpFilt = designfilt('bandpassiir','FilterOrder',4, ...
-         'HalfPowerFrequency1',0.1,'HalfPowerFrequency2',30, ...
-         'SampleRate',samp_rate);
+          'HalfPowerFrequency1',0.1,'HalfPowerFrequency2',30, ...
+          'SampleRate',samp_rate/2);
 
 BPFiltered = filtfilt(bpFilt, rerefdat(:,:));
 
 %Notch IIR
 
-w0 = 60/(samp_rate);
+w0 = 60/(samp_rate/4);
 bw = w0/35; %35 is Q factor
 [b,a] = iirnotch(w0,bw);
 NotchFiltered = filtfilt(b,a, BPFiltered(:,:));
@@ -143,30 +143,27 @@ for i = 1:numRelEvents
             = eventCount(find(types==events(i+(numEvents-numRelEvents)).type))+1;
     end
 end
-
-timeFrame = 1:750;
-subplot(2,1,1);
-plot(timeFrame, epochedDat.T10.eventNum52(:,:));
-title("Not Corrected")
-
 %% Perform baseline correction on all Epochs
 
 %Average data from -200 ms to 0 ms and subtract average from all epochs
 eventCount = ones(numTypes,1);
 for i = 1:numRelEvents
-    epochedDat.(strcat("T",int2str(events(i+(numEvents-numRelEvents)).type))).( ...
-        strcat("eventNum",int2str(eventCount(find(types==events(i+(numEvents-numRelEvents)).type)))))...
-        = epochedDat.(strcat("T",int2str(events(i+(numEvents-numRelEvents)).type))).( ...
-        strcat("eventNum",int2str(eventCount(find(types==events(i+(numEvents-numRelEvents)).type)))))...
-        - mean(mean(NotchFiltered(:,(latencies(i)-200/4+1):latencies(i))));
-    if eventCount(find(types==events(i+(numEvents-numRelEvents)).type)) >= ... 
-            numEventTypes(find(types==events(i+(numEvents-numRelEvents)).type))
-        
-    else 
-        eventCount(find(types==events(i+(numEvents-numRelEvents)).type)) ...
-            = eventCount(find(types==events(i+(numEvents-numRelEvents)).type))+1;
+    for j = 1:numCH
+        epochedDat.(strcat("T",int2str(events(i+(numEvents-numRelEvents)).type))).( ...
+            strcat("eventNum",int2str(eventCount(find(types==events(i+(numEvents-numRelEvents)).type)))))(j,:)...
+            = epochedDat.(strcat("T",int2str(events(i+(numEvents-numRelEvents)).type))).( ...
+            strcat("eventNum",int2str(eventCount(find(types==events(i+(numEvents-numRelEvents)).type)))))(j,:)...
+            - mean(NotchFiltered(j,(latencies(i)-200/4+1):latencies(i)));
     end
+        if eventCount(find(types==events(i+(numEvents-numRelEvents)).type)) >= ...
+                numEventTypes(find(types==events(i+(numEvents-numRelEvents)).type))
+            
+        else
+            eventCount(find(types==events(i+(numEvents-numRelEvents)).type)) ...
+                = eventCount(find(types==events(i+(numEvents-numRelEvents)).type))+1;
+        end
 end
+
 
 %% Artifact Rejection
 % Checks for artifacts based on the variance of the channel and a threshold
@@ -216,7 +213,5 @@ save(strcat(strcat(strcat(path, " PreProcessed"), "\Artifact Rejected"),...
     strcat(filename, "AR.mat")),'artifactRejected');
 
 %% Plot End Results
-% timeFrame = (latencies(24)-1000/4+1):(latencies(24)+2000/4);
-subplot(2,1,2);
-plot(timeFrame, epochedDat.T10.eventNum52(:,:));
-title("Baseline Corrected")
+% plots results from a single event
+plotEvent(epochedDat); %Plots Baseline Corrected Events (Not artifact rejected)
