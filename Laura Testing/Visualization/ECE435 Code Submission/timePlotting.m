@@ -3,7 +3,7 @@ function [] = timePlotting(data,scale_factors,electrodes,tile_size)
 prompt = 'Enter instance before event (value from 1-749)';
 x = input(prompt);
 
-prompt = 'Enter instance after event (value from 1-749)'
+prompt = 'Enter instance after event (value from 1-749)';
 y = input(prompt);
 instances = [x,y];
 
@@ -20,7 +20,7 @@ for i = 1:length(instances)
         
         mid = (max(data(idx,:),[],2) + min(data(idx,:),[],2))/2;
         diff = (max(data(idx,:),[],2) - min(data(idx,:),[],2))/2;
-        y = (data(idx,instances(i))-mid)./diff
+        y = (data(idx,instances(i))-mid)./diff;
         y = -mv_scale.*y;
         offset = tile_size(1)/2 + (row-1)*tile_size(1);
         y = y + offset;

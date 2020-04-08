@@ -1,15 +1,15 @@
 %% ECE 435 Final Project Code - EEG Data Visualization Project
 % by Laura Kissack (V00844693) and Tanner Oleksuik (V00867082)
 
-preProcessing;
+PreProcessing;
 
 
 %% Specify data for visualization
 %arbitrarily chosen 
-d = load('T10E52.mat');
-data = d.data;
+% d = load('T10E52.mat');
+% data = d.data;
 % test = load('participant1NAR.mat');
-% data = test.epochedDat.T10.eventNum52;
+data = epochedDat.T10.eventNum52;
 close all;
 %% Step 1 - Create Grayscale Figure
 grayscale = data2grayscale(data);
