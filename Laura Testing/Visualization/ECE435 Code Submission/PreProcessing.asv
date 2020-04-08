@@ -206,21 +206,18 @@ path = join(path, '\');
 
 %Make folders for both artifact rejected and baseline corrected data
 %Note* Artifact rejected has also been baseline corrected
-disp("Creating directories....");
 mkdir(strcat(path, " PreProcessed"));
 mkdir(strcat(strcat(path, " PreProcessed\"), "Artifact Rejected"));
 mkdir(strcat(strcat(path, " PreProcessed\"), "Artifacts Included"));
 
 filename = strcat('\', structname);
 %Save structs as .mat files in the appropriate folders
-disp("Saving baseline corrected data....");
 save(strcat(strcat(strcat(path, " PreProcessed"), "\Artifacts Included"),...
     strcat(filename, "NAR.mat")), 'epochedDat');
-disp("Saving artifact rejected data....");
+
 save(strcat(strcat(strcat(path, " PreProcessed"), "\Artifact Rejected"),...
     strcat(filename, "AR.mat")),'artifactRejected');
 
-disp("Done processing");
 %% Plot End Results
 % plots results from a single event
 plotEvent(epochedDat,types,eventCount); %Plots Baseline Corrected Events (Not artifact rejected)
